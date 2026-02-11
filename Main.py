@@ -1,4 +1,13 @@
 #!/usr/bin/env python3
+
+"""
+SAS+ to STRIPS Parser
+
+This script parses SAS+ planning problem files and converts them to a STRIPS-like representation.
+It reads a SAS+ file, extracts the initial state, goal conditions, variables, and operators,
+then transforms them into a set of facts and actions suitable for STRIPS-style planning.
+"""
+
 import sys
 
 

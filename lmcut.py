@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+"""
+Implementation of the LM-Cut heuristic for STRIPS planning tasks.
+"""
+
 from collections import deque
 import sys
 from Main import read_sas_file, convert_fdr_to_strips
@@ -6,7 +10,16 @@ from hmax import compute_h_max_for_lm_cut
 
 
 def compute_h_lm_cut(initial_state, goal_state, actions, facts):
+    """
+    Compute the LM-Cut heuristic value.
 
+    The algorithm repeatedly:
+    1) Computes h_max and fact costs (delta),
+    2) Builds a justification graph based on h_max supporters,
+    3) Finds an s-t cut in the graph,
+    4) Extracts landmarks and subtracts their cost from actions,
+    until h_max becomes zero.
+    """
     if len(initial_state) > 1 or len(goal_state) > 1:
         initial_state, goal_state, actions, facts = transform_prob(initial_state, goal_state, actions, facts)
 
@@ -29,7 +42,9 @@ def compute_h_lm_cut(initial_state, goal_state, actions, facts):
 
 
 def adjust_landmarks(landmarks, lm_cost, actions):
-
+    """
+    Reduce the cost of all landmark actions by lm_cost.
+    """
     for action in actions:
         if action["name"] in landmarks:
             action["cost"] -= lm_cost
@@ -37,6 +52,9 @@ def adjust_landmarks(landmarks, lm_cost, actions):
 
 
 def find_landmarks(N_star, N_zero, justification_g):
+    """
+    Identify landmark actions from the s-t cut and compute their minimum cost.
+    """
     landmarks = set()
     lm_costs = set()
     for fact in N_zero:
@@ -52,7 +70,9 @@ def find_landmarks(N_star, N_zero, justification_g):
 
 
 def s_t_cut(justification_graph, justification_graph_transpose, initial_state, goal_state):
-
+    """
+        Compute the s-t cut in the justification graph.
+    """
     N_star = set()
     N_zero = set()
     goal_fact = next(iter(goal_state))
@@ -88,6 +108,9 @@ def s_t_cut(justification_graph, justification_graph_transpose, initial_state, g
 
 
 def create_justification_graph(actions, facts, supporters):
+    """
+        Build the justification graph and its transpose.
+    """
     adj = {fact: set() for fact in facts}
     adj_transpose = {fact: set() for fact in facts}
 
@@ -108,7 +131,9 @@ def create_justification_graph(actions, facts, supporters):
 
 
 def count_supporters(supporters, actions, delta):
-
+    """
+        Select the h_max supporter for each action.
+    """
     for action in actions:
         max_d = -1
         supp = None
@@ -133,7 +158,9 @@ def count_supporters(supporters, actions, delta):
 
 
 def transform_prob(initial_state, goal_state, actions, facts):
-
+    """
+    Transform the problem to have a single initial fact and a single goal fact.
+    """
     if len(initial_state) > 1:
         new_fact = "I"
         new_initial_state = set()
@@ -164,7 +191,9 @@ def transform_prob(initial_state, goal_state, actions, facts):
 
 
 def run_lm_cut(sas_file_input):
-
+    """
+    Load a SAS file, convert it to STRIPS, and compute LM-Cut.
+    """
     sas_data = read_sas_file(sas_file_input)
     initial_state, goal_state, actions, facts = convert_fdr_to_strips(sas_data)
 
@@ -176,6 +205,7 @@ if __name__ == "__main__":
         print("Expected input: python lmcut.py <sas_file>")
         exit(0)
 
+    # Read input SAS file
     sas_file = sys.argv[1],
 
     # sas_file = "elevators01.sas"

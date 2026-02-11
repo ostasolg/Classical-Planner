@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
 
+"""
+A* planner for SAS/FDR tasks converted into a STRIPS-like representation.
+
+This script:
+1) Reads a SAS file (Fast Downward format),
+2) Converts it to STRIPS-style facts/actions,
+3) Runs A* search using a selected heuristic (h_max or LM-Cut),
+4) Prints the resulting plan (sequence of action names) and its total cost.
+"""
+
 import heapq
 import sys
 from hmax import compute_h_max
@@ -8,6 +18,17 @@ from Main import read_sas_file, convert_fdr_to_strips
 
 
 class SearchNode:
+    """
+    A node in the A* search tree.
+
+    Attributes:
+        state (frozenset[str]): Planning state (facts that are true)
+        parent_node (SearchNode|None): Backpointer for plan extraction
+        action (str|None): Name of the action applied to reach this node
+        g_value (int): Path cost from the initial state
+        h_value (float): Heuristic estimate to the goal
+        f_value (float): f = g + h (priority key in the open list)
+    """
     def __init__(self, state, parent_node=None, action=None):
         self.state = frozenset(state)
         self.parent_node = parent_node
@@ -21,6 +42,9 @@ class SearchNode:
 
 
 def A_star(init_state, goal_state, actions, facts, heuristic_f):
+    """
+    Run A* search from init_state to goal_state.
+    """
     open_nodes = list()
     distance = dict()
 
@@ -54,6 +78,9 @@ def A_star(init_state, goal_state, actions, facts, heuristic_f):
 
 
 def get_succ(state, actions):
+    """
+    Generate successor states by applying all applicable actions.
+    """
     succ = list()
 
     for action in actions:
@@ -66,10 +93,16 @@ def get_succ(state, actions):
 
 
 def is_goal(state, goal_state):
+    """
+    Goal test: all goal facts must be present in the current state.
+    """
     return goal_state.issubset(state)
 
 
 def extract_plan(goal_node):
+    """
+    Reconstruct the plan by following parent pointers back to the root.
+    """
     plan = list()
     cost = goal_node.g_value
     current = goal_node
@@ -81,6 +114,9 @@ def extract_plan(goal_node):
 
 
 def select_heuristic(heuristic):
+    """
+    Map a heuristic name string to the corresponding function.
+    """
     heuristics = {
         'hmax': compute_h_max,
         'lmcut': compute_h_lm_cut
@@ -93,13 +129,22 @@ def select_heuristic(heuristic):
 
 
 def print_plan(plan, cost):
-
+    """
+    Print the plan (one action per line) and its total cost.
+    """
     for action in plan:
         print(action)
     print("Plan cost:", cost)
 
 
 def run_planning(sas_file_input, heuristic_input):
+    """
+    End-to-end runner:
+    - parse SAS
+    - convert to STRIPS-like task
+    - run A*
+    - print plan or failure message
+    """
     try:
         if heuristic_input == "lmcut":
             print(0)
